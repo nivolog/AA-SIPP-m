@@ -11,6 +11,7 @@ Config::Config()
     rescheduling = CN_DEFAULT_RESCHEDULING;
     planforturns = CN_DEFAULT_PLANFORTURNS;
     additionalwait = CN_DEFAULT_ADDITIONALWAIT;
+    resolution = CN_DEFAULT_RESOLUTION;
 }
 
 bool Config::getConfig(const char* fileName)
@@ -225,6 +226,21 @@ bool Config::getConfig(const char* fileName)
             std::cout << "Warning! Wrong value of '"<<CNS_TAG_INFLATEINTERVALS<<"' element. It should belong to the interval [0,100]. Its value is set to '"<<CN_DEFAULT_INFLATEINTERVALS<<"'."<<std::endl;
             inflatecollisionintervals = CN_DEFAULT_INFLATEINTERVALS;
         }
+    }
+
+    element = algorithm->FirstChildElement(CNS_TAG_RESOLUTION);
+    if (!element)
+    {
+        std::cout << "Warning! No '"<<CNS_TAG_RESOLUTION<<"' element found inside '"<<CNS_TAG_ALGORITHM<<"' section. Its value is set to "<<CN_DEFAULT_RESOLUTION<<"."<<std::endl;
+        timelimit = CN_DEFAULT_RESOLUTION;
+    }
+    else
+    {
+        value = element->GetText();
+        stream<<value;
+        stream>>resolution;
+        stream.clear();
+        stream.str("");
     }
 
     XMLElement *options = root->FirstChildElement(CNS_TAG_OPTIONS);

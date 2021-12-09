@@ -231,10 +231,15 @@ public:
 class Primitives
 {
     public:
+    double resolution = 0.2;
+    double angle_step = 45.0;
+    double max_velocity, avg_velocity = 1.0;
+
     std::vector<std::vector<Primitive>> type0;
     std::vector<std::vector<Primitive>> type1;
-    bool loadPrimitives(const char* FileName)
+    bool loadPrimitives(const char* FileName, double resolution)
     {
+        this->resolution = resolution;
         std::string value;
         std::stringstream stream;
 
@@ -284,7 +289,18 @@ class Primitives
                 prim.j_coefficients.push_back(coef->DoubleAttribute("a3"));
                 prim.j_coefficients.push_back(coef->DoubleAttribute("a4"));
 
-                prim.countCells();
+                for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells")) {
+                    if (sweeping_cells->DoubleAttribute("resolution") == resolution){}
+                        for (tinyxml2::XMLElement *cell = sweeping_cells->FirstChildElement(); cell; cell = cell->NextSiblingElement("cell")) {
+                            int j = cell->IntAttribute("x");
+                            int i = cell->IntAttribute("y");
+                            Cell c(i, j);
+                            prim.cells.push_back(c);
+                        }
+                }
+
+                if (prim.cells.size() == 0) prim.countCells();
+
                 prim.countIntervals(0.5);
                 if(prim.type == 0)
                 {

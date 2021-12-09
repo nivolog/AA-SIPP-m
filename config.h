@@ -23,6 +23,7 @@ public:
     int initialprioritization;
     double startsafeinterval;
     double additionalwait;
+    double resolution;
     std::string logfilename;
     std::string logpath;
 

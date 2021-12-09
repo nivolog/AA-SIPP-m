@@ -51,6 +51,8 @@ private:
     OpenContainer Open;
     ClosedList closed;
     double intervals_time, cells_time;
+
+    double resolution, angle_step, max_velocity, avg_velocity;
 };
 
 #endif // AA_SIPP_H

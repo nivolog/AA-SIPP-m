@@ -7,7 +7,10 @@ AA_SIPP::AA_SIPP(const Config &config)
     constraints = nullptr;
     intervals_time = 0;
     cells_time = 0;
-    primitives.loadPrimitives("trajectories_moving.xml");
+    primitives.loadPrimitives("trajectories_moving.xml", this->config->resolution);
+    this->angle_step = primitives.angle_step;
+    this->max_velocity = primitives.max_velocity;
+    this->avg_velocity = primitives.avg_velocity;
 }
 
 AA_SIPP::~AA_SIPP()
@@ -292,6 +295,7 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
         for(Node s:findSuccessors(curNode, map))
             Open.addOpen(s);
     }
+    std::cout << "Closed size: " << closed.size() << "\n";
     if(goalNode.g < CN_INFINITY)
     {
         makePrimaryPath(goalNode);
