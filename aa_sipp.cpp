@@ -21,7 +21,10 @@ bool AA_SIPP::stopCriterion(const Node &curNode, Node &goalNode)
         std::cout << "OPEN list is empty! ";
         return true;
     }
-    if(curNode.i == curagent.goal_i && curNode.j == curagent.goal_j && curNode.interval.end == CN_INFINITY && curNode.speed == 0)
+    if( curNode.i - curagent.goal_i <= CN_POS_TOL &&
+        curNode.j == curagent.goal_j &&
+        curNode.interval.end == CN_INFINITY &&
+        curNode.speed == 0)
     {
         goalNode = curNode;
         return true;
