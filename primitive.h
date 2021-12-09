@@ -256,6 +256,21 @@ class Primitives
             std::cout << "No 'root' element found in XML file."<<std::endl;
             return false;
         }
+
+        tinyxml2::XMLElement *config = root->FirstChildElement("config");
+        if (!config)
+        {
+            std::cout << "No config found in primitives! Using default values\n";
+        }else{
+            if (config->DoubleAttribute("angle_step") != 0)
+                this->angle_step = config->DoubleAttribute("angle_step");
+            if (config->DoubleAttribute("max_velocity") != 0)
+                this->max_velocity = config->DoubleAttribute("max_velocity");
+            if (config->DoubleAttribute("avg_velocity") != 0)
+                this->avg_velocity = config->DoubleAttribute("avg_velocity");
+        }
+        std::cout << "Max velocity: " << this->max_velocity << "\tAvg velocity: " << this->avg_velocity<< "\tAngle step: " << this->angle_step << std::endl;
+
         int id=0;
         for(tinyxml2::XMLElement  *elem = root->FirstChildElement();elem;elem = elem->NextSiblingElement("trajectory"))
         {
