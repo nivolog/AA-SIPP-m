@@ -257,16 +257,20 @@ class Primitives
             return false;
         }
 
+        /*
+         * Getting config for primitives
+         * Max and average velocity are essential for heuristic function in the planner
+         * Angle step is the same, but also performs the way primitives being stored in containers*/
         tinyxml2::XMLElement *config = root->FirstChildElement("config");
         if (!config)
         {
             std::cout << "No config found in primitives! Using default values\n";
         }else{
-            if (config->DoubleAttribute("angle_step") != 0)
+            if (config->DoubleAttribute("angle_step"))
                 this->angle_step = config->DoubleAttribute("angle_step");
-            if (config->DoubleAttribute("max_velocity") != 0)
+            if (config->DoubleAttribute("max_velocity"))
                 this->max_velocity = config->DoubleAttribute("max_velocity");
-            if (config->DoubleAttribute("avg_velocity") != 0)
+            if (config->DoubleAttribute("avg_velocity"))
                 this->avg_velocity = config->DoubleAttribute("avg_velocity");
         }
         std::cout << "Max velocity: " << this->max_velocity << "\tAvg velocity: " << this->avg_velocity<< "\tAngle step: " << this->angle_step << std::endl;
@@ -286,12 +290,12 @@ class Primitives
 
                 prim.source.i = 0;
                 prim.source.j = 0;
-                prim.source.angle_id = coef->IntAttribute("phi0")/45;
+                prim.source.angle_id = int(coef->IntAttribute("phi0")/this->angle_step);
                 prim.source.speed = coef->IntAttribute("v0");
 
                 prim.target.i = coef->IntAttribute("yf");
                 prim.target.j = coef->IntAttribute("xf");
-                prim.target.angle_id = coef->IntAttribute("phif")/45;
+                prim.target.angle_id = int(coef->IntAttribute("phif")/this->angle_step);
                 prim.target.speed = coef->IntAttribute("vf");
 
                 prim.i_coefficients.push_back(coef->DoubleAttribute("b1"));
@@ -338,8 +342,8 @@ class Primitives
                 prim.type = -1;
                 prim.id = turning->IntAttribute("id");
                 prim.source.i = prim.source.j = prim.target.i = prim.target.j = prim.source.speed = prim.target.speed = 0;
-                prim.source.angle_id = turning->IntAttribute("phi0")/45;
-                prim.target.angle_id = turning->IntAttribute("phif")/45;
+                prim.source.angle_id = int(turning->IntAttribute("phi0")/this->angle_step);
+                prim.target.angle_id = int(turning->IntAttribute("phif")/this->angle_step);
                 prim.duration = turning->DoubleAttribute("Tf");
                 prim.agentSize = 0.5;
                 prim.cells = {Cell(0,0)};
