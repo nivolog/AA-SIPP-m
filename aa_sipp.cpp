@@ -51,6 +51,7 @@ std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
     std::vector<Primitive> prims = primitives.getPrimitives(curNode.i, curNode.j, curNode.angle_id, curNode.speed, map);
     for(auto p:prims)
     {
+//        std::cout << "Primitive: " << p.id << std::endl;
         newNode = Node(curNode.i + p.target.i, curNode.j + p.target.j);
         newNode.angle_id = p.target.angle_id;
         newNode.speed = p.target.speed;
@@ -291,9 +292,13 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     while(!stopCriterion(curNode, goalNode))
     {
         curNode = Open.findMin();
+//        std::cout << "Current: " << curNode.j << "\t" << curNode.i << std::endl;
         closed.insert(curNode);
-        for(Node s:findSuccessors(curNode, map))
+        for(Node s:findSuccessors(curNode, map)){
+//            std::cout << "Successor: " << s.j << "\t" << s.i << std::endl;
             Open.addOpen(s);
+        }
+
     }
     std::cout << "Closed size: " << closed.size() << "\n";
     if(goalNode.g < CN_INFINITY)

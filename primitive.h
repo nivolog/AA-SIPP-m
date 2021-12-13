@@ -233,7 +233,8 @@ class Primitives
     public:
     double resolution = 0.2;
     double angle_step = 45.0;
-    double max_velocity, avg_velocity = 1.0;
+    double max_velocity = 1.0;
+    double avg_velocity = 1.0;
 
     std::vector<std::vector<Primitive>> type0;
     std::vector<std::vector<Primitive>> type1;
@@ -266,11 +267,11 @@ class Primitives
         {
             std::cout << "No config found in primitives! Using default values\n";
         }else{
-            if (config->DoubleAttribute("angle_step"))
+            if (config->DoubleAttribute("angle_step") > CN_EPSILON)
                 this->angle_step = config->DoubleAttribute("angle_step");
-            if (config->DoubleAttribute("max_velocity"))
+            if (config->DoubleAttribute("max_velocity") > CN_EPSILON)
                 this->max_velocity = config->DoubleAttribute("max_velocity");
-            if (config->DoubleAttribute("avg_velocity"))
+            if (config->DoubleAttribute("avg_velocity") > CN_EPSILON)
                 this->avg_velocity = config->DoubleAttribute("avg_velocity");
         }
         std::cout << "Max velocity: " << this->max_velocity << "\tAvg velocity: " << this->avg_velocity<< "\tAngle step: " << this->angle_step << std::endl;
@@ -290,12 +291,13 @@ class Primitives
 
                 prim.source.i = 0;
                 prim.source.j = 0;
-                prim.source.angle_id = int(coef->IntAttribute("phi0")/this->angle_step);
+
+                prim.source.angle_id = int(coef->DoubleAttribute("phi0")/this->angle_step);
                 prim.source.speed = coef->IntAttribute("v0");
 
                 prim.target.i = coef->IntAttribute("yf");
                 prim.target.j = coef->IntAttribute("xf");
-                prim.target.angle_id = int(coef->IntAttribute("phif")/this->angle_step);
+                prim.target.angle_id = int(coef->DoubleAttribute("phif")/this->angle_step);
                 prim.target.speed = coef->IntAttribute("vf");
 
                 prim.i_coefficients.push_back(coef->DoubleAttribute("b1"));
@@ -319,6 +321,7 @@ class Primitives
                 }
 
                 if (prim.cells.size() == 0) prim.countCells();
+//                std::cout << "ID loaded: " << prim.id  << "\tTarget: " << prim.target.j << " " << prim.target.i  << "\tSource: " << " " << prim.source.angle_id<< "\n";
 
                 prim.countIntervals(0.5);
                 if(prim.type == 0)
