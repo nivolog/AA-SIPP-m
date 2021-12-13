@@ -55,7 +55,7 @@ std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
         newNode.angle_id = p.target.angle_id;
         newNode.speed = p.target.speed;
         newNode.primitive = p;
-        newNode.heading = p.target.angle_id;
+        newNode.heading = p.target.angle_id * this->angle_step;
         newNode.primitive.begin = curNode.g;
         newNode.primitive.setSize(curagent.size);
         newNode.primitive.setSource(curNode.i, curNode.j);
@@ -418,11 +418,11 @@ void AA_SIPP::makeSecondaryPath()
             if(cur.type == -2)//wait action
             {
                 cur.id=0;
-                angle = cur.source.angle_id*45;
+                angle = cur.source.angle_id*this->angle_step;
             }
             else if(cur.type == -1)//rotation action
             {
-                angle = cur.source.angle_id*45 + (cur.target.angle_id - cur.source.angle_id)*45*(t-cur.begin)/cur.duration;
+                angle = cur.source.angle_id*this->angle_step + (cur.target.angle_id - cur.source.angle_id)*this->angle_step*(t-cur.begin)/cur.duration;
             }
             TerminalPoint n(p.i, p.j, t, angle, cur.id);
             point_path.push_back(n);
@@ -430,7 +430,7 @@ void AA_SIPP::makeSecondaryPath()
         }
         i++;
     }
-    TerminalPoint n(curagent.goal_i, curagent.goal_j, primitives_path.back().begin + primitives_path.back().duration, 180 - primitives_path.back().target.angle_id*45, primitives_path.back().id);
+    TerminalPoint n(curagent.goal_i, curagent.goal_j, primitives_path.back().begin + primitives_path.back().duration, 180 - primitives_path.back().target.angle_id*this->angle_step, primitives_path.back().id);
     point_path.push_back(n);
     return;
 }
