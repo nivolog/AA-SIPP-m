@@ -51,7 +51,7 @@ void Mission::createSearch()
         delete m_pSearch;
         delete m_pLogger;
     }
-    m_pSearch = new AA_SIPP(m_config);
+    m_pSearch = new AA_SIPP(m_config, primitivesName);
 }
 
 void Mission::createLog()

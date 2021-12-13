@@ -1,13 +1,13 @@
 #include "aa_sipp.h"
 
-AA_SIPP::AA_SIPP(const Config &config)
+AA_SIPP::AA_SIPP(const Config &config, const char *primitivesName)
 {
     this->config = std::make_shared<const Config> (config);
     openSize = 0;
     constraints = nullptr;
     intervals_time = 0;
     cells_time = 0;
-    primitives.loadPrimitives("trajectories_moving.xml", this->config->resolution);
+    primitives.loadPrimitives(primitivesName, this->config->resolution);
     this->angle_step = primitives.angle_step;
     this->max_velocity = primitives.max_velocity;
     this->avg_velocity = primitives.avg_velocity;

@@ -24,7 +24,7 @@ class AA_SIPP
 
 public:
 
-    AA_SIPP(const Config &config);
+    AA_SIPP(const Config &config, const char *primitivesName);
     ~AA_SIPP();
     SearchResult startSearch(Map &map, Task &task, DynamicObstacles &obstacles);
     SearchResult sresult;
