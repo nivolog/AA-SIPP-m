@@ -8,11 +8,11 @@ int main(int argc, char* argv[])
     {
         Mission mission;
         if(argc == 5)
-            mission.setFileNames(argv[1], argv[2], argv[3], argv[4]);
+            mission.setFileNames(argv[1], argv[2], argv[3], argv[4], nullptr);
         else if(argc == 4)
-            mission.setFileNames(argv[1], argv[2], argv[3], nullptr);
+            mission.setFileNames(argv[1], argv[2], argv[3], nullptr,  nullptr);
         else if(argc == 2)
-            mission.setFileNames(argv[1], argv[1], argv[1], argv[1]);
+            mission.setFileNames(argv[1], argv[1], argv[1], argv[1], nullptr);
         else
         {
             std::cout<<"Wrong number of input XML-files. It should be either all-in-one file, or three ones: map-file, task-file and config-file. Additional file with obstacles is also allowed.\n";

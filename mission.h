@@ -24,7 +24,7 @@ public:
     void startSearch();
     void printSearchResultsToConsole();
     void saveSearchResultsToLog();
-    void setFileNames(const char *taskName, const char* mapName, const char *configName, const char *obstaclesName);
+    void setFileNames(const char *taskName, const char* mapName, const char *configName, const char *obstaclesName, const char *primitivesName);
 
 private:
     Map              m_map;
@@ -38,7 +38,7 @@ private:
     const char*      taskName;
     const char*      configName;
     const char*      obstaclesName;
-
+    const char*      primitivesName;
 };
 
 #endif

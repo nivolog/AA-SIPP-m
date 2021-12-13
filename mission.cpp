@@ -12,12 +12,13 @@ Mission::~Mission()
     delete m_pLogger;
 }
 
-void Mission::setFileNames(const char *taskName, const char *mapName, const char *configName, const char *obstaclesName)
+void Mission::setFileNames(const char *taskName, const char *mapName, const char *configName, const char *obstaclesName, const char *primitivesName)
 {
     this->taskName = taskName;
     this->mapName = mapName;
     this->configName = configName;
     this->obstaclesName = obstaclesName;
+    this->primitivesName = primitivesName;
 }
 
 bool Mission::getMap()
