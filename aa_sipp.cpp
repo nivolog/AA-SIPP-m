@@ -282,7 +282,7 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     curNode.interval = constraints->getSafeInterval(curNode.i, curNode.j, 0);
     curNode.interval_id = curNode.interval.id;
     curNode.heading = curagent.start_heading;
-    curNode.angle_id = 0;
+    curNode.angle_id = int(curNode.heading / this->angle_step);
     curNode.speed = 0;
     curNode.primitive.id = -1;
     curNode.primitive.source.angle_id = 0;
