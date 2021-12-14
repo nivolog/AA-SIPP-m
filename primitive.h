@@ -295,8 +295,8 @@ class Primitives
                 prim.source.angle_id = int(coef->DoubleAttribute("phi0")/this->angle_step);
                 prim.source.speed = coef->IntAttribute("v0");
 
-                prim.target.i = coef->IntAttribute("yf");
-                prim.target.j = coef->IntAttribute("xf");
+                prim.target.i = int(std::round(coef->DoubleAttribute("yf") / this->resolution));
+                prim.target.j = int(std::round(coef->DoubleAttribute("xf") / this->resolution));
                 prim.target.angle_id = int(coef->DoubleAttribute("phif")/this->angle_step);
                 prim.target.speed = coef->IntAttribute("vf");
 
@@ -311,7 +311,7 @@ class Primitives
                 prim.j_coefficients.push_back(coef->DoubleAttribute("a4"));
 
                 for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells")) {
-                    if (sweeping_cells->DoubleAttribute("resolution") == resolution){}
+                    if (sweeping_cells->DoubleAttribute("resolution") == resolution)
                         for (tinyxml2::XMLElement *cell = sweeping_cells->FirstChildElement(); cell; cell = cell->NextSiblingElement("cell")) {
                             int j = cell->IntAttribute("x");
                             int i = cell->IntAttribute("y");

@@ -7,6 +7,7 @@ AA_SIPP::AA_SIPP(const Config &config, const char *primitivesName)
     constraints = nullptr;
     intervals_time = 0;
     cells_time = 0;
+    this->resolution = this->config->resolution;
     primitives.loadPrimitives(primitivesName, this->config->resolution);
     this->angle_step = primitives.angle_step;
     this->max_velocity = primitives.max_velocity;
@@ -292,7 +293,7 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     while(!stopCriterion(curNode, goalNode))
     {
         curNode = Open.findMin();
-//        std::cout << "Current: " << curNode.j << "\t" << curNode.i << std::endl;
+//        std::cout << "Current: " << curNode.j << "\t" << curNode.i << "\t" << curNode.heading << "\t" << curNode.angle_id << std::endl;
         closed.insert(curNode);
         for(Node s:findSuccessors(curNode, map)){
 //            std::cout << "Successor: " << s.j << "\t" << s.i << std::endl;
