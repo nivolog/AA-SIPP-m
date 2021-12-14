@@ -343,20 +343,21 @@ class Primitives
                         type1.back().push_back(prim);
                 }
             }
-            for(tinyxml2::XMLElement  *turning = elem->FirstChildElement();turning; turning = turning->NextSiblingElement("time_finish"))
-            {
-                Primitive prim;
-                prim.type = -1;
-                prim.id = turning->IntAttribute("id");
-                prim.source.i = prim.source.j = prim.target.i = prim.target.j = prim.source.speed = prim.target.speed = 0;
-                prim.source.angle_id = int(turning->IntAttribute("phi0")/this->angle_step);
-                prim.target.angle_id = int(turning->IntAttribute("phif")/this->angle_step);
-                prim.duration = turning->DoubleAttribute("Tf");
-                prim.agentSize = 0.5;
-                prim.cells = {Cell(0,0)};
-                prim.cells[0].interval = {0, prim.duration};
-                type0.back().push_back(prim);
-            }
+//            for(tinyxml2::XMLElement  *turning = elem->FirstChildElement();turning; turning = turning->NextSiblingElement("time_finish"))
+//            {
+//                    Primitive prim;
+//                    prim.type = -1;
+//                    prim.id = turning->IntAttribute("id");
+//                    prim.source.i = prim.source.j = prim.target.i = prim.target.j = prim.source.speed = prim.target.speed = 0;
+//                    prim.source.angle_id = int(turning->IntAttribute("phi0")/this->angle_step);
+//                    prim.target.angle_id = int(turning->IntAttribute("phif")/this->angle_step);
+//                    prim.duration = turning->DoubleAttribute("Tf");
+//                    prim.agentSize = 0.5;
+//                    prim.cells = {Cell(0,0)};
+//                    prim.cells[0].interval = {0, prim.duration};
+//                    type0.back().push_back(prim);
+//                }
+//            }
         }
     }
     Primitive getPrimitive(int id)
