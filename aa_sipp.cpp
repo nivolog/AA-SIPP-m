@@ -25,8 +25,9 @@ bool AA_SIPP::stopCriterion(const Node &curNode, Node &goalNode)
         std::cout << "OPEN list is empty! ";
         return true;
     }
-    if( curNode.i - curagent.goal_i <= CN_POS_TOL &&
-        curNode.j == curagent.goal_j &&
+    if( std::abs(curNode.i - curagent.goal_i) <= CN_POS_TOL &&
+        std::abs(curNode.j - curagent.goal_j) <= CN_POS_TOL &&
+        std::abs(curNode.heading - curagent.goal_heading) <= CN_ANG_TOL &&
         curNode.interval.end == CN_INFINITY &&
         curNode.speed == 0)
     {
@@ -38,7 +39,7 @@ bool AA_SIPP::stopCriterion(const Node &curNode, Node &goalNode)
 
 double AA_SIPP::getHValue(int i, int j)
 {
-    return (sqrt(pow(i - curagent.goal_i, 2) + pow(j - curagent.goal_j, 2)));
+    return (sqrt(pow(i - curagent.goal_i, 2) + pow(j - curagent.goal_j, 2))) * this->resolution;
 }
 
 std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
