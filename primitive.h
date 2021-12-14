@@ -316,14 +316,18 @@ class Primitives
                             int j = cell->IntAttribute("x");
                             int i = cell->IntAttribute("y");
                             Cell c(i, j);
+                            c.interval.first = 0;
+                            c.interval.second = CN_INFINITY;
                             prim.cells.push_back(c);
                         }
                 }
 
                 if (prim.cells.size() == 0) prim.countCells();
 //                std::cout << "ID loaded: " << prim.id  << "\tTarget: " << prim.target.j << " " << prim.target.i  << "\tSource: " << " " << prim.source.angle_id<< "\n";
-
-                prim.countIntervals(0.5);
+//                for(auto cell : prim.cells){
+//                    std::cout << "Cell: " << cell.i << " " << cell.j << "\n";
+//                }
+//                prim.countIntervals(0.5);
                 if(prim.type == 0)
                 {
                     if(type0.empty() || type0.back().at(0).source.angle_id != prim.source.angle_id)
@@ -375,13 +379,19 @@ class Primitives
             prims = type0[angle_id];
         for(int k = 0; k < prims.size(); k++)
             for(auto c:prims[k].getCells())
-                if(c.interval.first > -CN_EPSILON)
-                if(!map.CellOnGrid(i+c.i,j+c.j) || map.CellIsObstacle(i+c.i, j+c.j))
-                {
-                    prims.erase(prims.begin() + k);
-                    k--;
-                    break;
+                if(c.interval.first > -CN_EPSILON){
+                    if(!map.CellOnGrid(i+c.i,j+c.j) || map.CellIsObstacle(i+c.i, j+c.j))
+                    {
+//                        std::cout << "Rejected primitive number " << prims[k].id << " because of cell in " << j+c.j << " " << i+c.i << "\n";
+                        prims.erase(prims.begin() + k);
+                        k--;
+                        break;
+                    }
+//                    std::cout << "Primitive " << prims[k].id << " .Cell in " << j+c.j << " " << i+c.i << " is okay\n";
                 }
+
+        }
+
         return prims;
     }
 };
