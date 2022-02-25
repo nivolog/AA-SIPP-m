@@ -146,7 +146,7 @@ void XmlLogger::writeToLogPath(const SearchResult &sresult, const Task &task, co
                 auto it = sresult.pathInfo[i].primitives.begin();
                 int partnumber(0);
                 XMLElement *part;
-                while(it != --sresult.pathInfo[i].primitives.end())
+                while(it != sresult.pathInfo[i].primitives.end())
                 {
                     part = doc->NewElement("action");
                     part->SetAttribute("number", partnumber);

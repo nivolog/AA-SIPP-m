@@ -321,8 +321,12 @@ class Primitives
                             prim.cells.push_back(c);
                         }
                 }
-
+//                std::cout << "Cells size 1: " << prim.cells.size() << "\n";
                 if (prim.cells.size() == 0) prim.countCells();
+//                std::cout << "Cells size 2: " << prim.cells.size() << "\n";
+                if (prim.id == -321)
+                    for (auto cell : prim.cells)
+                        std::cout << "Primitive 12. Cell " << cell.j << "\t" << cell.i << "\n";
 //                std::cout << "ID loaded: " << prim.id  << "\tTarget: " << prim.target.j << " " << prim.target.i  << "\tSource: " << " " << prim.source.angle_id<< "\n";
 //                for(auto cell : prim.cells){
 //                    std::cout << "Cell: " << cell.i << " " << cell.j << "\n";
@@ -379,6 +383,8 @@ class Primitives
         else
             prims = type0[angle_id];
         for(int k = 0; k < prims.size(); k++)
+        {
+//            std::cout << "Primitive " << prims[k].id << " got " << prims[k].getCells().size() << " cells\n";
             for(auto c:prims[k].getCells())
                 if(c.interval.first > -CN_EPSILON){
                     if(!map.CellOnGrid(i+c.i,j+c.j) || map.CellIsObstacle(i+c.i, j+c.j))
