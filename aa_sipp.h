@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <random>
 #include "primitive.h"
+#include "dubins.h"
 #include <fstream>
 #ifdef __linux__
     #include <sys/time.h>
@@ -36,7 +37,7 @@ private:
     void makeSecondaryPath();
     bool findPath(unsigned int numOfCurAgent, const Map &map);
     void setPriorities(const Task &task);
-    double getHValue(int i, int j);
+    double getHValue(int i, int j, double o);
     bool changePriorities(int bad_i);
     unsigned int openSize;
     std::vector<TerminalPoint> point_path;
@@ -50,6 +51,7 @@ private:
     Primitives primitives;
     OpenContainer Open;
     ClosedList closed;
+    Dubins dubins;
     double intervals_time, cells_time;
 
     double resolution, angle_step, max_velocity, avg_velocity;

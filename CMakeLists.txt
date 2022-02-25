@@ -20,7 +20,8 @@ set( SOURCE_FILES
      config.cpp
 	 dynamicobstacles.cpp
      aa_sipp.cpp
-     constraints.cpp )
+     constraints.cpp 
+     ./Dubins/dubins.cpp)
 
 set( HEADER_FILES 
 	 primitive.h
@@ -36,6 +37,9 @@ set( HEADER_FILES
      aa_sipp.h 
      structs.h
      constraints.h
-	 lineofsight.h )
+	 lineofsight.h 
+     point.h
+     dubins.h
+     constants.h)
     
 add_executable( AA-SIPP-m ${SOURCE_FILES} ${HEADER_FILES} )

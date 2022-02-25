@@ -1,5 +1,4 @@
 #include "aa_sipp.h"
-
 AA_SIPP::AA_SIPP(const Config &config, const char *primitivesName)
 {
     this->config = std::make_shared<const Config> (config);
@@ -12,6 +11,7 @@ AA_SIPP::AA_SIPP(const Config &config, const char *primitivesName)
     this->angle_step = primitives.angle_step;
     this->max_velocity = primitives.max_velocity;
     this->avg_velocity = primitives.avg_velocity;
+    this->dubins = Dubins(2 / this->resolution, false);
 }
 
 AA_SIPP::~AA_SIPP()
@@ -27,7 +27,7 @@ bool AA_SIPP::stopCriterion(const Node &curNode, Node &goalNode)
     }
     if( std::abs(curNode.i - curagent.goal_i) <= CN_POS_TOL &&
         std::abs(curNode.j - curagent.goal_j) <= CN_POS_TOL &&
-        std::abs(curNode.heading - curagent.goal_heading) <= CN_ANG_TOL &&
+        std::min(360 - std::abs(curNode.heading - curagent.goal_heading), std::abs(curNode.heading - curagent.goal_heading)) <= CN_ANG_TOL &&
         curNode.interval.end == CN_INFINITY &&
         curNode.speed == 0)
     {
@@ -37,9 +37,13 @@ bool AA_SIPP::stopCriterion(const Node &curNode, Node &goalNode)
     return false;
 }
 
-double AA_SIPP::getHValue(int i, int j)
+double AA_SIPP::getHValue(int i, int j, double o)
 {
-    return (sqrt(pow(i - curagent.goal_i, 2) + pow(j - curagent.goal_j, 2))) * this->resolution;
+//    return (sqrt(pow(i - curagent.goal_i, 2) + pow(j - curagent.goal_j, 2))) * this->resolution; /// 1.13137;
+    const Dub_Point curr = Dub_Point(0, 0, fmod(360-o, 360)/360*2*PI);
+    const Dub_Point goal = Dub_Point(curagent.goal_j-j, -(curagent.goal_i-i), fmod(360-curagent.goal_heading, 360)/360*2*PI);
+    return dubins.distance(&curr, &goal)*resolution;
+//    return 0;
 }
 
 std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
@@ -53,7 +57,6 @@ std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
     std::vector<Primitive> prims = primitives.getPrimitives(curNode.i, curNode.j, curNode.angle_id, curNode.speed, map);
     for(auto p:prims)
     {
-//        std::cout << "Primitive: " << p.id << std::endl;
         newNode = Node(curNode.i + p.target.i, curNode.j + p.target.j);
         newNode.angle_id = p.target.angle_id;
         newNode.speed = p.target.speed;
@@ -64,7 +67,14 @@ std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
         newNode.primitive.setSource(curNode.i, curNode.j);
         newNode.g = curNode.g + p.duration;
         newNode.Parent = parent;
-        h_value = getHValue(newNode.i, newNode.j);
+
+        timeval start, res;
+        gettimeofday(&start, NULL);
+        h_value = getHValue(newNode.i, newNode.j, newNode.heading);
+        gettimeofday(&res, NULL);
+        std::cout <<  "Time spent for calculating H-value: " << static_cast<double>(start.tv_usec - res.tv_usec) << " us\n";
+
+
         if(newNode.i == curNode.i && newNode.j == curNode.j)
         {
             if(curNode.speed == 0 && curNode.interval.end > newNode.g)
@@ -281,24 +291,28 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     QueryPerformanceFrequency(&freq);
 #endif
     Node curNode(curagent.start_i, curagent.start_j, 0, 0), goalNode(curagent.goal_i, curagent.goal_j, CN_INFINITY, CN_INFINITY);
-    curNode.F = getHValue(curNode.i, curNode.j);
     curNode.interval = constraints->getSafeInterval(curNode.i, curNode.j, 0);
     curNode.interval_id = curNode.interval.id;
     curNode.heading = curagent.start_heading;
+    curNode.F = getHValue(curNode.i, curNode.j, curNode.heading);
     curNode.angle_id = int(curNode.heading / this->angle_step);
     curNode.speed = 0;
     curNode.primitive.id = -1;
     curNode.primitive.source.angle_id = 0;
     curNode.primitive.target.angle_id = 0;
     Open.addOpen(curNode);
-    while(!stopCriterion(curNode, goalNode))
+    bool goalOpened = false;
+    while(!stopCriterion(curNode, goalNode) && !goalOpened)
     {
         curNode = Open.findMin();
-//        std::cout << "Current: " << curNode.j << "\t" << curNode.i << "\t" << curNode.heading << "\t" << curNode.angle_id << std::endl;
+//        if (curNode.heading == 270) std::cout << "Current: " << curNode.j << "\t" << curNode.i << "\t" << curNode.heading << "\t" << getHValue(curNode.i, curNode.j, curNode.heading) << std::endl;
         closed.insert(curNode);
         for(Node s:findSuccessors(curNode, map)){
 //            std::cout << "Successor: " << s.j << "\t" << s.i << std::endl;
             Open.addOpen(s);
+
+//            goalOpened = stopCriterion(s, goalNode);
+//            if (goalOpened) break;
         }
 
     }
