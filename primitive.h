@@ -87,9 +87,11 @@ public:
     std::vector<double> i_coefficients;
     std::vector<double> j_coefficients;
     std::vector<Cell> cells;
+    std::vector<Cell> cellsCenter;
     bool operator==(const Primitive& other) { return this->id == other.id; }
     void setSize(double size) { agentSize = size; }
     std::vector<Cell> getCells() { return cells; }
+    std::vector<Cell> getCellsCenter() { return cellsCenter; }
     double size() {return agentSize;}
     void setSource(int i, int j)
     {
@@ -226,6 +228,21 @@ public:
                 t += 0.1;
         }
     }
+
+    bool isSafe(int i, int j, const Map& map){
+        for (auto c : cellsCenter){
+            if (!map.CellFarFromObst(i+c.i, j+c.j)) return false;
+        }
+        return true;
+    }
+
+    bool hasCollision(int i, int j, const Map& map){
+        for (auto c : cellsCenter)
+            if (map.CellOnGrid(i+c.i, j+c.j))
+                if (map.CellCloseToObst(i+c.i, j+c.j)) return true;
+
+        return false;
+    }
 };
 
 class Primitives
@@ -321,14 +338,25 @@ class Primitives
                             prim.cells.push_back(c);
                         }
                 }
-//                std::cout << "Cells size 1: " << prim.cells.size() << "\n";
+
+//                for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells_center")) {
+//                    if (sweeping_cells->DoubleAttribute("resolution") == resolution)
+//                        for (tinyxml2::XMLElement *cell = sweeping_cells->FirstChildElement(); cell; cell = cell->NextSiblingElement("cell")) {
+//                            int j = cell->IntAttribute("x");
+//                            int i = cell->IntAttribute("y");
+//                            Cell c(i, j);
+//                            c.interval.first = 0;
+//                            c.interval.second = CN_INFINITY;
+//                            prim.cellsCenter.push_back(c);
+//                        }
+//                }
+
                 if (prim.cells.size() == 0) prim.countCells();
-//                std::cout << "Cells size 2: " << prim.cells.size() << "\n";
                 if (prim.id == -321)
                     for (auto cell : prim.cells)
                         std::cout << "Primitive 12. Cell " << cell.j << "\t" << cell.i << "\n";
 //                std::cout << "ID loaded: " << prim.id  << "\tTarget: " << prim.target.j << " " << prim.target.i  << "\tSource: " << " " << prim.source.angle_id<< "\n";
-//                for(auto cell : prim.cells){
+//                for(auto cell : prim.cellsCenter){
 //                    std::cout << "Cell: " << cell.i << " " << cell.j << "\n";
 //                }
 //                prim.countIntervals(0.5);
@@ -375,31 +403,41 @@ class Primitives
                 if(t.id == id)
                     return t;
     }
-    std::vector<Primitive> getPrimitives(int i, int j, int angle_id, int speed, const Map& map)
+    std::vector<Primitive> getPrimitives(int i, int j, int angle_id, int speed, const Map& map, int type = 0)
     {
         std::vector<Primitive> prims, res;
         if(speed == 1)
             prims = type1[angle_id];
         else
             prims = type0[angle_id];
-        for(int k = 0; k < prims.size(); k++)
-        {
-//            std::cout << "Primitive " << prims[k].id << " got " << prims[k].getCells().size() << " cells\n";
-            for(auto c:prims[k].getCells())
-                if(c.interval.first > -CN_EPSILON){
-                    if(!map.CellOnGrid(i+c.i,j+c.j) || map.CellIsObstacle(i+c.i, j+c.j))
-                    {
-//                        std::cout << "Rejected primitive number " << prims[k].id << " because of cell in " << j+c.j << " " << i+c.i << "\n";
-                        prims.erase(prims.begin() + k);
-                        k--;
-                        break;
-                    }
-//                    std::cout << "Primitive " << prims[k].id << " .Cell in " << j+c.j << " " << i+c.i << " is okay\n";
+
+//        for(int k = 0; k < prims.size(); k++){
+//            if(prims[k].isSafe(i, j, map)){
+//                continue;
+//            }else if(prims[k].hasCollision(i, j, map)){
+//                prims.erase(prims.begin() + k);
+//                k--;
+//                continue;
+//            }else{
+//                for (auto c:prims[k].getCells())
+//                    if (!map.CellOnGrid(i + c.i, j + c.j) || map.CellIsObstacle(i + c.i, j + c.j)) {
+//                        prims.erase(prims.begin() + k);
+//                        k--;
+//                        break;
+//                    }
+//            }
+//        }
+
+        for(int k = 0; k < prims.size(); k++){
+            for (auto c:prims[k].getCells())
+                if (!map.CellOnGrid(i + c.i, j + c.j) || map.CellIsObstacle(i + c.i, j + c.j)) {
+                    prims.erase(prims.begin() + k);
+                    k--;
+                    break;
                 }
-
         }
-
         return prims;
     }
 };
+
 #endif

@@ -12,7 +12,14 @@
 
 class Map
 {
+private:
+    std::vector<std::vector<double>> distances;
+    void dt(float *image);
+    float *dt1(float *f, int n);
+    std::vector<std::vector<int>> GridLow;
+    std::vector<std::vector<int>> GridHigh;
 public:
+    void computeDistances();
     std::vector<std::vector<int>> Grid;
     unsigned int height, width;
 
@@ -24,6 +31,10 @@ public:
     bool CellOnGrid (int i, int j) const;
     bool CellIsObstacle(int i, int j) const;
     int  getValue(int i, int j) const;
+    double getDistance(int i, int j) const;
+
+    bool CellCloseToObst (int i, int j) const;
+    bool CellFarFromObst (int i, int j) const;
 };
 
 #endif

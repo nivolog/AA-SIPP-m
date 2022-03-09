@@ -1,6 +1,10 @@
 #include "map.h"
 using namespace tinyxml2;
 
+#define INF 1E20
+#define LOW 1
+#define HIGH 2.2360679775
+
 Map::Map()
 {
     height = 0;
@@ -102,6 +106,23 @@ bool Map::getMap(const char* FileName)
         }
         row = row->NextSiblingElement(CNS_TAG_ROW);
     }
+
+
+    distances.resize(height);
+    for(int i = 0; i < height; i++)
+        distances[i].resize(width, 0);
+
+    computeDistances();
+
+    GridLow = Grid;
+    GridHigh = Grid;
+    for (int i = 0; i < height; ++i)
+        for (int j = 0; j < width; ++j)
+        {
+            GridLow[i][j] = distances[i][j] < LOW ? 1 : 0;
+            GridHigh[i][j] = distances[i][j] < HIGH ? 1 : 0;
+        }
+
     return true;
 }
 
@@ -129,4 +150,123 @@ int Map::getValue(int i, int j) const
         return -1;
 
     return Grid[i][j];
+}
+
+
+/* dt of 1d function using euclidean distance */
+float * Map::dt1(float *f, int n)
+{
+    float *d = new float[n];
+    int *v = new int[n];
+    float *z = new float[n+1];
+    int k = 0;
+    v[0] = 0;
+    z[0] = -INF;
+    z[1] = +INF;
+    for (int q = 1; q <= n-1; q++)
+    {
+        float s  = ((f[q] + q * q)-(f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
+        while (s <= z[k]) {
+            k--;
+            s  = ((f[q] + q * q)-(f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
+        }
+        k++;
+        v[k] = q;
+        z[k] = s;
+        z[k+1] = +INF;
+    }
+
+    k = 0;
+    for (int q = 0; q <= n-1; q++) {
+        while (z[k+1] < q)
+            k++;
+        d[q] = (q-v[k]) * (q-v[k]) + f[v[k]];
+    }
+
+    delete [] v;
+    delete [] z;
+    return d;
+}
+
+/* dt of 2d function using euclidean distance */
+void Map::dt(float *image)
+{
+
+    float *f = new float[std::max(width, height)];
+
+    // transform along columns
+    for (int j = 0; j < width; ++j)
+    {
+        for (int i = 0; i < height; ++i)
+        {
+            f[i] = image[j + i * width];
+        }
+
+        float *d = dt1(f, height);
+
+        for (int i = 0; i < height; ++i) {
+            image[j + i * width] = d[i];
+        }
+        delete [] d;
+    }
+
+    // transform along rows
+    for (int i = 0; i < height; ++i)
+    {
+        for (int j = 0; j < width; ++j)
+        {
+            f[j] = image[j + i * width];
+        }
+        float *d = dt1(f, width);
+        for (int j = 0; j < width; ++j)
+        {
+            image[j + i * width] = d[j];
+        }
+        delete [] d;
+    }
+
+    delete f;
+}
+
+void Map::computeDistances()
+{
+    /* dt of binary image using squared distance */
+    float *image = new float[width * height];
+    for (int i = 0; i < height; ++i)
+    {
+        for (int j = 0; j < width; ++j)
+        {
+            if (Grid[i][j])
+                image[j + i * width] = 0;
+            else
+                image[j + i * width] = INF;
+        }
+    }
+
+    dt(image);
+
+
+
+    for (int i = 0 ; i < height; ++i)
+    {
+        for (int j = 0 ; j < width; ++j)
+        {
+//            std::cout << "Debug\n";
+            distances[i][j] = sqrt(image[j + i * width]);
+        }
+    }
+    delete image;
+}
+
+double Map::getDistance(int i, int j) const{
+    return distances[i][j];
+}
+
+bool Map::CellCloseToObst(int i, int j) const{
+    return bool(GridLow[i][j]);
+}
+
+
+bool Map::CellFarFromObst(int i, int j) const{
+    return (GridHigh[i][j] == 0);
 }
