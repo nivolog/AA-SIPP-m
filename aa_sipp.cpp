@@ -42,7 +42,7 @@ double AA_SIPP::getHValue(int i, int j, double o)
 //    return (sqrt(pow(i - curagent.goal_i, 2) + pow(j - curagent.goal_j, 2))) * this->resolution; /// 1.13137;
     const Dub_Point curr = Dub_Point(0, 0, fmod(360-o, 360)/360*2*PI);
     const Dub_Point goal = Dub_Point(curagent.goal_j-j, -(curagent.goal_i-i), fmod(360-curagent.goal_heading, 360)/360*2*PI);
-    return dubins.distance(&curr, &goal)*resolution;
+    return dubins.distance(&curr, &goal);
 //    return 0;
 }
 
@@ -67,13 +67,7 @@ std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
         newNode.primitive.setSource(curNode.i, curNode.j);
         newNode.g = curNode.g + p.duration;
         newNode.Parent = parent;
-
-        timeval start, res;
-        gettimeofday(&start, NULL);
         h_value = getHValue(newNode.i, newNode.j, newNode.heading);
-        gettimeofday(&res, NULL);
-        std::cout <<  "Time spent for calculating H-value: " << static_cast<double>(start.tv_usec - res.tv_usec) << " us\n";
-
 
         if(newNode.i == curNode.i && newNode.j == curNode.j)
         {
@@ -284,6 +278,7 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
 
 #ifdef __linux__
     timeval begin, end;
+    timeval beginH, endH;
     gettimeofday(&begin, NULL);
 #else
     LARGE_INTEGER begin, end, freq;
@@ -302,13 +297,22 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     curNode.primitive.target.angle_id = 0;
     Open.addOpen(curNode);
     bool goalOpened = false;
+    double timeH(0);
     while(!stopCriterion(curNode, goalNode) && !goalOpened)
     {
         curNode = Open.findMin();
-//        if (curNode.heading == 270) std::cout << "Current: " << curNode.j << "\t" << curNode.i << "\t" << curNode.heading << "\t" << getHValue(curNode.i, curNode.j, curNode.heading) << std::endl;
+//        std::cout << "Currently working on (" << curNode.j << ", " << curNode.i << ")\n";
+        // We count additional H-value, because it's much more easy to track spent time
+
+
         closed.insert(curNode);
-        for(Node s:findSuccessors(curNode, map)){
-//            std::cout << "Successor: " << s.j << "\t" << s.i << std::endl;
+
+        gettimeofday(&beginH, NULL);
+        auto successors = findSuccessors(curNode, map);
+        gettimeofday(&endH, NULL);
+        timeH += (endH.tv_sec - beginH.tv_sec)*1000000 + static_cast<double>(endH.tv_usec - beginH.tv_usec);
+
+        for(Node s:successors){
             Open.addOpen(s);
 
 //            goalOpened = stopCriterion(s, goalNode);
@@ -317,6 +321,11 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
 
     }
     std::cout << "Closed size: " << closed.size() << "\n";
+    std::cout << "Opened size: " << Open.open.size() << "\n";
+    std::cout << "Nodes expanded: " << closed.size() + Open.open.size() << "\n";
+    std::cout << "Time for finding successors: " << timeH << " us\n";
+    std::cout << "Average time per finding successors: " << timeH/closed.size() << " us\n";
+
     if(goalNode.g < CN_INFINITY)
     {
         makePrimaryPath(goalNode);
@@ -356,6 +365,7 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
         resultPath.pathlength = 0;
         sresult.pathInfo[numOfCurAgent] = resultPath;
     }
+    std::cout << "Time for finding successors in relative to total time: " << timeH / (resultPath.runtime*10000) << " % of total time\n";
     return resultPath.pathfound;
 }
 
