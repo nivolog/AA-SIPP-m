@@ -144,8 +144,9 @@ typedef multi_index_container<
 
 class OpenContainer
 {
-    OpenList open;
+
 public:
+    OpenList open;
     void clear() {open.clear();}
     bool isEmpty() {return open.empty();}
     Node findMin()
