@@ -39,7 +39,9 @@ bool DynamicObstacles::getObstacles(const char *fileName)
     int prim_id(1);
     for(XMLElement *element = root->FirstChildElement(CNS_TAG_OBSTACLE); element; element = element->NextSiblingElement(CNS_TAG_OBSTACLE))
     {
-        //obs.id = element->Attribute(CNS_TAG_ATTR_ID);
+        obs.id = element->Attribute(CNS_TAG_ATTR_ID);
+//        std::cout << "Reading obst " << obs.id << "\n";
+//        std::cout << "Default size " << default_size << "\n";
         if(element->DoubleAttribute(CNS_TAG_ATTR_SIZE))
             obs.size = element->DoubleAttribute(CNS_TAG_ATTR_SIZE);
         else
@@ -51,11 +53,13 @@ bool DynamicObstacles::getObstacles(const char *fileName)
         }
         obs.sections.clear();
         obs.primitives.clear();
+//        std::cout << "This size " << obs.size << "\n";
         Node node;
         Primitive prim;
         double curtime(0);
         for(XMLElement *sec = element->FirstChildElement("action"); sec; sec = sec->NextSiblingElement("action"))
         {
+//            std::cout << "Reading prim for obs " << obs.id << "\n";
             prim.source.i = sec->IntAttribute("y0");
             prim.source.j = sec->IntAttribute("x0");
             prim.target.i = sec->IntAttribute("yf");
@@ -78,7 +82,11 @@ bool DynamicObstacles::getObstacles(const char *fileName)
             prim.i_coefficients[2] = prim.j_coefficients[2] = prim.i_coefficients[3] = prim.j_coefficients[3] = 0;
 
             prim.countCells();
-            prim.countIntervals(prim.agentSize);
+            prim.countIntervals(prim.agentSize, CN_MAX_OBSTACLE_TIME);
+            if(obs.id == "45")
+                for(auto c : prim.cells){
+                    std::cout << "Counted cell (" << c.j << ", " << c.i << ") from " << c.interval.first << " to " << c.interval.second << " for obst number " << obs.id << "\n";
+                }
             obs.primitives.push_back(prim);
         }
         Primitive last;
@@ -86,12 +94,20 @@ bool DynamicObstacles::getObstacles(const char *fileName)
         last.source = obs.primitives.back().target;
         last.target = obs.primitives.back().target;
         last.begin = obs.primitives.back().begin + obs.primitives.back().duration;
-        last.cells = {Cell(last.source.i, last.source.j)};
-        last.cells.back().interval = {last.begin, CN_INFINITY};
-        last.duration = CN_INFINITY;
+//        std::cout << "Initiating count cells for obst number " << obs.id << "\n";
         last.setSize(obs.size);
+        last.countLastCells();
+//        last.cells = {Cell(last.source.i, last.source.j)};
+//        last.cells.back().interval = {last.begin, CN_INFINITY};
+        if(obs.id == "45")
+            for(auto c : last.cells){
+                std::cout << "Counted last cell (" << c.j << ", " << c.i << ") from " << c.interval.first << " to " << c.interval.second <<  "for obst number " << obs.id << "\n";
+            }
+        last.duration = CN_INFINITY;
+
         last.id = prim_id;
         prim_id++;
+        obs.primitives.push_back(last);
         obstacles.push_back(obs);
         //if(obstacles.size() == 200)
         //    break;

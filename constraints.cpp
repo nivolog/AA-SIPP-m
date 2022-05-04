@@ -48,9 +48,10 @@ void Constraints::updateCellSafeIntervals(std::pair<int, int> cell)
     std::vector<std::pair<int, int>> cells = los.getCells(cell.first, cell.second);
     std::vector<int> prim_ids;
     for(int k = 0; k < cells.size(); k++)
-        for(int l = 0; l < constraints[cells[k].first][cells[k].second].size(); l++)
-            if(std::find(prim_ids.begin(), prim_ids.end(), constraints[cells[k].first][cells[k].second][l]) == prim_ids.end())
-                prim_ids.push_back(constraints[cells[k].first][cells[k].second][l]);
+        if(cells[k].first >= 0 && cells[k].second >= 0 && cells[k].first < 600 && cells[k].second < 600)
+            for(int l = 0; l < constraints[cells[k].first][cells[k].second].size(); l++)
+                if(std::find(prim_ids.begin(), prim_ids.end(), constraints[cells[k].first][cells[k].second][l]) == prim_ids.end())
+                    prim_ids.push_back(constraints[cells[k].first][cells[k].second][l]);
     std::vector<Primitive> prims;
     for(int i:prim_ids)
         prims.push_back(obstacles->getPrimitive(i));
@@ -119,6 +120,19 @@ void Constraints::updateCellSafeIntervals(std::pair<int, int> cell)
             collision_intervals[i2][j2].push_back({safe_intervals[i2][j2].back().end, CN_INFINITY});
 
     }
+
+    if(cell.first == 290 && cell.second == 325){
+        for(auto interval : safe_intervals[cell.first][cell.second]){
+            std::cout << "Found interval from " << interval.begin << " to " << interval.end << "\n";
+        }
+        for(auto constraint : constraints[cell.first][cell.second]){
+            std::cout << "And there is also constraints with prim " << constraint << "\n";
+            auto prim = obstacles->getPrimitive(constraint);
+            std::cout << "This prim goes from (" << prim.source.j << ", " << prim.source.i << ") to (" << prim.target.j << ", " << prim.target.i << ")\n";
+            auto interval = prim.getInterval(cell.first, cell.second, 0.5);
+            std::cout << "This prim has interval from " << interval.first << " to " << interval.second << "\n";
+        }
+    }
 }
 
 std::vector<SafeInterval> Constraints::getSafeIntervals(Node curNode, const ClosedList &close)
@@ -142,16 +156,26 @@ std::vector<SafeInterval> Constraints::getSafeIntervals(Node curNode)
 
 void Constraints::addConstraints(const std::vector<Primitive> &primitives, double size, double mspeed, const Map &map)
 {
-    if(primitives.size() == 1)
-        safe_intervals[primitives.back().source.i][primitives.back().source.j].clear();
-    for(auto prim: primitives)
-        for(auto c: prim.getCells())
+//    if(primitives.size() == 1)
+//        safe_intervals[primitives.back().source.i][primitives.back().source.j].clear();
+    for(auto prim: primitives){
+//        std::cout << "Adding prim " << prim.id << " with " << prim.getCells().size() << " cells available\n";
+        for(auto c: prim.getCells()){
+//            std::cout << "With cell (" << c.j << ", " << c.i << ")\n";
             constraints[c.i][c.j].push_back(prim.id);
+
+        }
+    }
+
+
 }
 
 std::vector<SafeInterval> Constraints::findIntervals(Node curNode, std::vector<double> &EAT, const ClosedList &close, const OpenContainer &open)
 {
     std::vector<SafeInterval> curNodeIntervals = getSafeIntervals(curNode, close);
+//    for (auto interval: curNodeIntervals)
+//        if(curNode.i == 48 && curNode.j == 18)std::cout << "From the inside possible interval is from " << interval.begin << " to " << interval.end << "\n";
+
     std::vector<SafeInterval> result;
     if(curNodeIntervals.empty())
     {
@@ -195,7 +219,7 @@ void Constraints::getEAT(Node curNode, double& startTime, double open_node_g)
         std::vector<SafeInterval> intervals = collision_intervals[c.i][c.j];
         for(int i = 0; i < intervals.size(); i++)
             if((interval.first <= intervals[i].begin && interval.second > intervals[i].begin) ||
-                    (interval.first >= intervals[i].begin && interval.first < intervals[i].end))
+               (interval.first >= intervals[i].begin && interval.first < intervals[i].end))
             {
                 startTime = startTime - interval.first + intervals[i].end + CN_EPSILON;
                 if(startTime > curNode.Parent->interval.end || startTime + curNode.primitive.duration > curNode.interval.end || curNode.Parent->speed > 0 || startTime + curNode.primitive.duration > open_node_g)

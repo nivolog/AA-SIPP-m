@@ -23,13 +23,13 @@ public:
     {
         this->agentSize = agentSize;
         int add_x, add_y, num = agentSize + 0.5 - CN_EPSILON;
-        for(int x = -num; x <= +num; x++)
-            for(int y = -num; y <= +num; y++)
+        for(int x = -num-1; x <= +num+1; x++)
+            for(int y = -num-1; y <= +num+1; y++)
             {
-                add_x = x != 0 ? 1 : 0;
-                add_y = y != 0 ? 1 : 0;
-                if((pow(2*abs(x) - add_x, 2) + pow(2*abs(y) - add_y, 2)) < pow(2*agentSize, 2))
-                    cells.push_back({x, y});
+//                add_x = x != 0 ? 1 : 0;
+//                add_y = y != 0 ? 1 : 0;
+                if((pow(abs(x) - 0.5, 2) + pow(abs(y) - 0.5, 2)) < pow(agentSize, 2))
+                cells.push_back({x, y});
             }
         if(cells.empty())
             cells.push_back({0,0});

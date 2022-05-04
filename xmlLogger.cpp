@@ -131,6 +131,8 @@ void XmlLogger::writeToLogPath(const SearchResult &sresult, const Task &task, co
             path->SetAttribute(CNS_TAG_ATTR_PATHFOUND, CNS_TAG_ATTR_TRUE);
             path->SetAttribute(CNS_TAG_ATTR_RUNTIME, float(sresult.pathInfo[i].runtime));
             path->SetAttribute(CNS_TAG_ATTR_DURATION, float(sresult.pathInfo[i].pathlength));
+            path->SetAttribute("closed_size", float(sresult.pathInfo[0].closed_size));
+            path->SetAttribute("open_size", float(sresult.pathInfo[0].open_size));
         }
         else
         {
