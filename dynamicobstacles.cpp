@@ -39,7 +39,7 @@ bool DynamicObstacles::getObstacles(const char *fileName)
     int prim_id(1);
     for(XMLElement *element = root->FirstChildElement(CNS_TAG_OBSTACLE); element; element = element->NextSiblingElement(CNS_TAG_OBSTACLE))
     {
-        //obs.id = element->Attribute(CNS_TAG_ATTR_ID);
+        obs.id = element->Attribute(CNS_TAG_ATTR_ID);
         if(element->DoubleAttribute(CNS_TAG_ATTR_SIZE))
             obs.size = element->DoubleAttribute(CNS_TAG_ATTR_SIZE);
         else
@@ -56,6 +56,9 @@ bool DynamicObstacles::getObstacles(const char *fileName)
         double curtime(0);
         for(XMLElement *sec = element->FirstChildElement("action"); sec; sec = sec->NextSiblingElement("action"))
         {
+//            if(curtime > CN_MAX_OBSTACLE_TIME)
+//                break;
+
             prim.source.i = sec->IntAttribute("y0");
             prim.source.j = sec->IntAttribute("x0");
             prim.target.i = sec->IntAttribute("yf");
@@ -77,25 +80,35 @@ bool DynamicObstacles::getObstacles(const char *fileName)
             prim.j_coefficients[1] = (prim.target.j - prim.source.j)/prim.duration;
             prim.i_coefficients[2] = prim.j_coefficients[2] = prim.i_coefficients[3] = prim.j_coefficients[3] = 0;
 
-            prim.countCells();
-            prim.countIntervals(prim.agentSize);
+            prim.countCells(0);
+//            prim.countIntervals(prim.agentSize);
             obs.primitives.push_back(prim);
         }
-        Primitive last;
-        last.type = -1;
-        last.source = obs.primitives.back().target;
-        last.target = obs.primitives.back().target;
-        last.begin = obs.primitives.back().begin + obs.primitives.back().duration;
-        last.cells = {Cell(last.source.i, last.source.j)};
-        last.cells.back().interval = {last.begin, CN_INFINITY};
-        last.duration = CN_INFINITY;
-        last.setSize(obs.size);
-        last.id = prim_id;
-        prim_id++;
+
+//        Primitive last;
+//        last.type = -1;
+//        last.source = obs.primitives.back().target;
+//        last.target = obs.primitives.back().target;
+//        last.begin = obs.primitives.back().begin + obs.primitives.back().duration;
+//        last.setSize(obs.size);
+//        last.countLastCells(0);
+//        last.duration = CN_INFINITY;
+//        last.id = prim_id;
+//        prim_id++;
+//        obs.primitives.push_back(last);
         obstacles.push_back(obs);
+
         //if(obstacles.size() == 200)
         //    break;
     }
+
+//    for(auto obs : obstacles){
+//        std::cout << "Added obstacle number " << obs.id << " with cells: \n";
+//        for(auto prim : obs.primitives)
+//            for(auto c : prim.cells)
+//                std::cout << "(" << c.j << ", " << c.i << ")-{" << c.interval.first << ", " << c.interval.second << "}, ";
+//        std::cout << "\n";
+//    }
     return true;
 }
 

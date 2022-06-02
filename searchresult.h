@@ -12,7 +12,7 @@ struct ResultPathInfo
     double runtime;
     std::vector<Primitive> primitives;
     std::vector<TerminalPoint> points;
-
+    unsigned int closed_size, open_size;
     ResultPathInfo()
     {
         runtime = 0;

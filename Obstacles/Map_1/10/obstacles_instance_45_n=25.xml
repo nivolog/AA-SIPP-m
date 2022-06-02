@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<root>
+	<dynamicobstacles>
+		<defaultparameters size="0.5"/>
+		<obstacle id="0" size="2.9">
+			<action id="0" x0="263" y0="246" xf="237" yf="282" duration="10"/>
+		</obstacle>
+		<obstacle id="1" size="2.9">
+			<action id="0" x0="325" y0="251" xf="325" yf="249" duration="10"/>
+		</obstacle>
+		<obstacle id="2" size="4.2">
+			<action id="0" x0="298" y0="372" xf="288" yf="379" duration="10"/>
+		</obstacle>
+		<obstacle id="3" size="4.5">
+			<action id="0" x0="352" y0="246" xf="287" yf="226" duration="10"/>
+		</obstacle>
+		<obstacle id="4" size="5.0">
+			<action id="0" x0="290" y0="272" xf="218" yf="227" duration="10"/>
+		</obstacle>
+		<obstacle id="5" size="2.8">
+			<action id="0" x0="231" y0="275" xf="305" yf="268" duration="10"/>
+		</obstacle>
+		<obstacle id="6" size="4.7">
+			<action id="0" x0="320" y0="278" xf="368" yf="294" duration="10"/>
+		</obstacle>
+		<obstacle id="7" size="3.5">
+			<action id="0" x0="238" y0="290" xf="242" yf="287" duration="10"/>
+		</obstacle>
+		<obstacle id="8" size="3.1">
+			<action id="0" x0="229" y0="294" xf="472" yf="347" duration="10"/>
+		</obstacle>
+		<obstacle id="9" size="4.1">
+			<action id="0" x0="235" y0="333" xf="221" yf="304" duration="10"/>
+		</obstacle>
+		<obstacle id="10" size="4.2">
+			<action id="0" x0="272" y0="285" xf="240" yf="317" duration="10"/>
+		</obstacle>
+		<obstacle id="11" size="3.5">
+			<action id="0" x0="276" y0="279" xf="297" yf="203" duration="10"/>
+		</obstacle>
+		<obstacle id="12" size="3.5">
+			<action id="0" x0="349" y0="271" xf="319" yf="266" duration="10"/>
+		</obstacle>
+		<obstacle id="13" size="4.1">
+			<action id="0" x0="248" y0="283" xf="201" yf="508" duration="10"/>
+		</obstacle>
+		<obstacle id="14" size="3.4">
+			<action id="0" x0="265" y0="346" xf="248" yf="392" duration="10"/>
+		</obstacle>
+		<obstacle id="15" size="3.3">
+			<action id="0" x0="311" y0="250" xf="350" yf="305" duration="10"/>
+		</obstacle>
+		<obstacle id="16" size="4.2">
+			<action id="0" x0="230" y0="309" xf="229" yf="328" duration="10"/>
+		</obstacle>
+		<obstacle id="17" size="4.3">
+			<action id="0" x0="283" y0="232" xf="314" yf="226" duration="10"/>
+		</obstacle>
+		<obstacle id="18" size="2.9">
+			<action id="0" x0="340" y0="283" xf="301" yf="269" duration="10"/>
+		</obstacle>
+		<obstacle id="19" size="3.1">
+			<action id="0" x0="368" y0="275" xf="429" yf="277" duration="10"/>
+		</obstacle>
+		<obstacle id="20" size="3.8">
+			<action id="0" x0="323" y0="252" xf="412" yf="245" duration="10"/>
+		</obstacle>
+		<obstacle id="21" size="4.9">
+			<action id="0" x0="257" y0="259" xf="288" yf="300" duration="10"/>
+		</obstacle>
+		<obstacle id="22" size="4.0">
+			<action id="0" x0="300" y0="235" xf="355" yf="196" duration="10"/>
+		</obstacle>
+		<obstacle id="23" size="4.0">
+			<action id="0" x0="321" y0="284" xf="450" yf="476" duration="10"/>
+		</obstacle>
+		<obstacle id="24" size="2.8">
+			<action id="0" x0="308" y0="229" xf="304" yf="233" duration="10"/>
+		</obstacle>
+	</dynamicobstacles>
+</root>

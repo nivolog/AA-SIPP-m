@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<root>
+	<dynamicobstacles>
+		<defaultparameters size="0.5"/>
+		<obstacle id="0" size="3.4">
+			<action id="0" x0="298" y0="351" xf="263" yf="331" duration="10"/>
+		</obstacle>
+		<obstacle id="1" size="3.8">
+			<action id="0" x0="233" y0="287" xf="277" yf="297" duration="10"/>
+		</obstacle>
+		<obstacle id="2" size="4.3">
+			<action id="0" x0="320" y0="263" xf="318" yf="263" duration="10"/>
+		</obstacle>
+		<obstacle id="3" size="2.9">
+			<action id="0" x0="300" y0="332" xf="282" yf="369" duration="10"/>
+		</obstacle>
+		<obstacle id="4" size="4.3">
+			<action id="0" x0="363" y0="282" xf="356" yf="297" duration="10"/>
+		</obstacle>
+	</dynamicobstacles>
+</root>

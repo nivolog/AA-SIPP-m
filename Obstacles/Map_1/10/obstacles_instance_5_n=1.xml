@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<root>
+	<dynamicobstacles>
+		<defaultparameters size="0.5"/>
+		<obstacle id="0" size="2.8">
+			<action id="0" x0="354" y0="304" xf="293" yf="244" duration="10"/>
+		</obstacle>
+	</dynamicobstacles>
+</root>

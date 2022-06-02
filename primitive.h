@@ -3,6 +3,15 @@
 #include "tinyxml2.h"
 #include "map.h"
 
+//int wrap(int x, int lower, int upper){
+//    int range = upper - lower + 1;
+//    x = ((x-lower) % range);
+//    if (x<0)
+//        return upper + 1 + x;
+//    else
+//        return lower + x;
+//}
+
 class Position
 {
     public:
@@ -31,6 +40,11 @@ class Cell
             return true;
         else
             return false;
+    }
+
+    friend std::ostream& operator<< (std::ostream& stream, const Cell& cell) {
+        stream << "(" << cell.j << ", " << cell.i << ")";
+        return stream;
     }
 };
 
@@ -142,7 +156,26 @@ public:
             return {-1,-1};
         else if(it->interval.first < 0)
             return {-1,-1};
-        return {begin + it->interval.first, begin + it->interval.second};
+//        return {begin + it->interval.first, begin + it->interval.second};
+        return {it->interval.first, it->interval.second};
+    }
+
+    std::pair<double, double> getIntervalCount(int i, int j, double size, double max_time = CN_INFINITY)
+    {
+        Cell c(i,j);
+        double end = duration > max_time ? max_time : duration;
+        std::pair<double, double> interval;
+        if(duration == CN_INFINITY){
+            interval.first = begin;
+            interval.second = CN_INFINITY;
+            return interval;
+        }else{
+            interval.first = getEndpoint(c, 0, end, 0.01, size, true);
+            interval.second = getEndpoint(c, interval.first + CN_RESOLUTION*2, end, 0.01, size, false);
+            if(interval.first > interval.second)
+                interval.first = -1;
+            return interval;
+        }
     }
 
     double getAngle(double t)
@@ -167,65 +200,71 @@ public:
     void countIntervals(double size)
     {
         double r = size + agentSize;
+        double end = duration; // > CN_MAX_OBSTACLE_TIME ? CN_MAX_OBSTACLE_TIME : duration;
         for(auto &c:cells)
         {
-            c.interval.first = getEndpoint(c, 0, duration, 0.01, size, true);
+            c.interval.first = getEndpoint(c, 0, end, 0.01, size, true);
             if(c.interval.first < 0)
                 continue;
-            c.interval.second = getEndpoint(c, c.interval.first + CN_RESOLUTION*2, duration, 0.01, size, false);
+            c.interval.second = getEndpoint(c, c.interval.first + CN_RESOLUTION*2, end, 0.01, size, false);
             if(c.interval.first > c.interval.second)
                 c.interval.first = -1;
         }
     }
-    void countCells()
+    std::vector<std::pair<int, int>> getCircleCells(double r){
+        std::vector<std::pair<int, int>> circleCells;
+        std::pair<int, int> c;
+        int num = r + 0.5 - CN_EPSILON;
+        for(int i = -num; i <= +num; i++)
+            for(int j = -num; j <= +num; j++)
+                if((pow((abs(i) > 0 ? abs(i) - 0.5 : 0), 2) + pow((abs(j) > 0 ? abs(j) - 0.5 : 0), 2)) < pow(r, 2)){
+                    c.first = i;
+                    c.second = j;
+                    if(std::find(circleCells.begin(), circleCells.end(), c) == circleCells.end())
+                        circleCells.push_back(c);
+                }
+        return circleCells;
+    }
+    void countLastCells(double inflation = 0){
+        auto circleCells = getCircleCells(agentSize + inflation);
+        double endtime = CN_INFINITY;
+        for(auto c : circleCells){
+            Cell cell(source.i + c.first, source.j + c.second);
+            cell.interval.first = begin;
+            cell.interval.second = endtime;
+            if(std::find(cells.begin(), cells.end(), cell) == cells.end())
+                cells.push_back(cell);
+        }
+    }
+    void countCells(double inflation = 0)
     {
-        double t(0);
+        double t(begin);
         bool stop(false);
-        while(t < duration + CN_EPSILON)
+        double endtime = begin + duration;
+        while(t < endtime + CN_EPSILON)
         {
-            double angle = getAngle(t);
-            double gap_i = cos(angle)*0.5;
-            double gap_j = sin(angle)*0.5;
             auto p = getPos(t);
-            int c_i(p.i+gap_i+0.5-1e-3);
-            if(p.i+gap_i < 0)
-                c_i = p.i+gap_i-0.5+1e-3;
-            int c_j(p.j-gap_j+0.5-1e-3);
-            if(p.j-gap_j < 0)
-                c_j = p.j-gap_j-0.5+1e-3;
-            Cell c(c_i, c_j);
-            if(std::find(cells.begin(), cells.end(), c) == cells.end())
-                cells.push_back(c);
-
-            c_i = p.i-gap_i+0.5-1e-3;
-            if(p.i-gap_i < 0)
-                c_i = p.i-gap_i-0.5+1e-3;
-            c_j = p.j+gap_j+0.5-1e-3;
-            if(p.j+gap_j < 0)
-                c_j = p.j+gap_j-0.5+1e-3;
-            c = Cell(c_i, c_j);
-            if(std::find(cells.begin(), cells.end(), c) == cells.end())
-                cells.push_back(c);
-
-            c_i = p.i+0.5-1e-3;
-            if(p.i < 0)
-                c_i = p.i-0.5+1e-3;
-            c_j = p.j+0.5-1e-3;
-            if(p.j < 0)
-                c_j = p.j-0.5+1e-3;
-            c = Cell(c_i, c_j);
-            if(std::find(cells.begin(), cells.end(), c) == cells.end())
-                cells.push_back(c);
-
-            if(t + 0.1 >= duration)
+            auto circleCells = getCircleCells(agentSize+inflation);
+            for(auto c : circleCells){
+                Cell cell(p.i + c.first, p.j + c.second);
+                auto it = std::find(cells.begin(), cells.end(), cell);
+                if(it == cells.end()){
+                    cell.interval.first = t;
+                    cell.interval.second = t;
+                    cells.push_back(cell);
+                }else{
+                    it->interval.second = t;
+                }
+            }
+            if(t + 0.01 >= endtime)
             {
                 if(stop)
                     break;
-                t = duration;
+                t = endtime;
                 stop = true;
             }
             else
-                t += 0.1;
+                t += 0.01;
         }
     }
 
@@ -239,7 +278,9 @@ public:
     bool hasCollision(int i, int j, const Map& map){
         for (auto c : cellsCenter)
             if (map.CellOnGrid(i+c.i, j+c.j))
-                if (map.CellCloseToObst(i+c.i, j+c.j)) return true;
+            {if (map.CellCloseToObst(i+c.i, j+c.j)) return true;}
+            else
+            {return true;}
 
         return false;
     }
@@ -252,7 +293,7 @@ class Primitives
     double angle_step = 45.0;
     double max_velocity = 1.0;
     double avg_velocity = 1.0;
-
+    std::vector<std::pair <int, int> > N3;
     std::vector<std::vector<Primitive>> type0;
     std::vector<std::vector<Primitive>> type1;
     bool loadPrimitives(const char* FileName, double resolution)
@@ -291,7 +332,6 @@ class Primitives
             if (config->DoubleAttribute("avg_velocity") > CN_EPSILON)
                 this->avg_velocity = config->DoubleAttribute("avg_velocity");
         }
-        std::cout << "Max velocity: " << this->max_velocity << "\tAvg velocity: " << this->avg_velocity<< "\tAngle step: " << this->angle_step << std::endl;
 
         int id=0;
         for(tinyxml2::XMLElement  *elem = root->FirstChildElement();elem;elem = elem->NextSiblingElement("trajectory"))
@@ -326,39 +366,37 @@ class Primitives
                 prim.j_coefficients.push_back(coef->DoubleAttribute("a2"));
                 prim.j_coefficients.push_back(coef->DoubleAttribute("a3"));
                 prim.j_coefficients.push_back(coef->DoubleAttribute("a4"));
+                /* Getting precomputed sweeping cells, that primitive covers
+                 * If there is no cells, we compute them */
 
-                for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells")) {
+                 for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells")) {
                     if (sweeping_cells->DoubleAttribute("resolution") == resolution)
                         for (tinyxml2::XMLElement *cell = sweeping_cells->FirstChildElement(); cell; cell = cell->NextSiblingElement("cell")) {
                             int j = cell->IntAttribute("x");
                             int i = cell->IntAttribute("y");
                             Cell c(i, j);
-                            c.interval.first = 0;
-                            c.interval.second = CN_INFINITY;
+                            c.interval.first = cell->DoubleAttribute("begin");
+                            c.interval.second = cell->DoubleAttribute("end");
                             prim.cells.push_back(c);
                         }
                 }
-
-//                for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells_center")) {
-//                    if (sweeping_cells->DoubleAttribute("resolution") == resolution)
-//                        for (tinyxml2::XMLElement *cell = sweeping_cells->FirstChildElement(); cell; cell = cell->NextSiblingElement("cell")) {
-//                            int j = cell->IntAttribute("x");
-//                            int i = cell->IntAttribute("y");
-//                            Cell c(i, j);
-//                            c.interval.first = 0;
-//                            c.interval.second = CN_INFINITY;
-//                            prim.cellsCenter.push_back(c);
-//                        }
-//                }
-
                 if (prim.cells.size() == 0) prim.countCells();
-                if (prim.id == -321)
-                    for (auto cell : prim.cells)
-                        std::cout << "Primitive 12. Cell " << cell.j << "\t" << cell.i << "\n";
-//                std::cout << "ID loaded: " << prim.id  << "\tTarget: " << prim.target.j << " " << prim.target.i  << "\tSource: " << " " << prim.source.angle_id<< "\n";
-//                for(auto cell : prim.cellsCenter){
-//                    std::cout << "Cell: " << cell.i << " " << cell.j << "\n";
-//                }
+                /* The same thing goes with center cells
+                 */
+                for (tinyxml2::XMLElement *sweeping_cells = coef->FirstChildElement(); sweeping_cells; sweeping_cells = sweeping_cells->NextSiblingElement("sweeping_cells_center")) {
+                    if (sweeping_cells->DoubleAttribute("resolution") == resolution)
+                        for (tinyxml2::XMLElement *cell = sweeping_cells->FirstChildElement(); cell; cell = cell->NextSiblingElement("cell")) {
+                            int j = cell->IntAttribute("x");
+                            int i = cell->IntAttribute("y");
+                            double begin = cell->DoubleAttribute("begin");
+                            double end = cell->DoubleAttribute("end");
+                            Cell c(i, j);
+                            c.interval.first = begin;
+                            c.interval.second = end;
+                            prim.cellsCenter.push_back(c);
+                        }
+                }
+
 //                prim.countIntervals(0.5);
                 if(prim.type == 0)
                 {
@@ -375,21 +413,6 @@ class Primitives
                         type1.back().push_back(prim);
                 }
             }
-//            for(tinyxml2::XMLElement  *turning = elem->FirstChildElement();turning; turning = turning->NextSiblingElement("time_finish"))
-//            {
-//                    Primitive prim;
-//                    prim.type = -1;
-//                    prim.id = turning->IntAttribute("id");
-//                    prim.source.i = prim.source.j = prim.target.i = prim.target.j = prim.source.speed = prim.target.speed = 0;
-//                    prim.source.angle_id = int(turning->IntAttribute("phi0")/this->angle_step);
-//                    prim.target.angle_id = int(turning->IntAttribute("phif")/this->angle_step);
-//                    prim.duration = turning->DoubleAttribute("Tf");
-//                    prim.agentSize = 0.5;
-//                    prim.cells = {Cell(0,0)};
-//                    prim.cells[0].interval = {0, prim.duration};
-//                    type0.back().push_back(prim);
-//                }
-//            }
         }
     }
     Primitive getPrimitive(int id)
@@ -403,7 +426,24 @@ class Primitives
                 if(t.id == id)
                     return t;
     }
-    std::vector<Primitive> getPrimitives(int i, int j, int angle_id, int speed, const Map& map, int type = 0)
+
+    bool checkPrimitive(int i, int j, Primitive prim, const Map& map){
+        for (auto c:prim.getCells())
+            if (!map.CellOnGrid(i + c.i, j + c.j) || map.CellIsObstacle(i + c.i, j + c.j)) {
+                return false;
+            }
+        return true;
+    }
+
+    bool checkPrimitiveCenter(int i, int j, Primitive prim, const Map& map){
+        for (auto c:prim.getCellsCenter())
+            if (!map.CellOnGrid(i + c.i, j + c.j) || map.CellIsObstacle(i + c.i, j + c.j)) {
+                return false;
+            }
+        return true;
+    }
+
+    std::vector<Primitive> getPrimitives(int i, int j, int angle_id, int speed, const Map& map)
     {
         std::vector<Primitive> prims, res;
         if(speed == 1)
@@ -411,33 +451,17 @@ class Primitives
         else
             prims = type0[angle_id];
 
-//        for(int k = 0; k < prims.size(); k++){
-//            if(prims[k].isSafe(i, j, map)){
-//                continue;
-//            }else if(prims[k].hasCollision(i, j, map)){
-//                prims.erase(prims.begin() + k);
-//                k--;
-//                continue;
-//            }else{
-//                for (auto c:prims[k].getCells())
-//                    if (!map.CellOnGrid(i + c.i, j + c.j) || map.CellIsObstacle(i + c.i, j + c.j)) {
-//                        prims.erase(prims.begin() + k);
-//                        k--;
-//                        break;
-//                    }
-//            }
-//        }
-
         for(int k = 0; k < prims.size(); k++){
-            for (auto c:prims[k].getCells())
-                if (!map.CellOnGrid(i + c.i, j + c.j) || map.CellIsObstacle(i + c.i, j + c.j)) {
-                    prims.erase(prims.begin() + k);
-                    k--;
-                    break;
-                }
+            if (!checkPrimitive(i, j, prims[k], map)){
+                prims.erase(prims.begin() + k);
+                k--;
+            }
         }
         return prims;
     }
+
 };
+
+
 
 #endif

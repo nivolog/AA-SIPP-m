@@ -7,12 +7,14 @@ int main(int argc, char* argv[])
     if (argc > 1)
     {
         Mission mission;
-        if(argc == 6)
-            mission.setFileNames(argv[1], argv[2], argv[3], argv[4], argv[5]);
+        if(argc == 7)
+            mission.setFileNames(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
+        else if(argc == 6)
+            mission.setFileNames(argv[1], argv[2], argv[3], argv[4], argv[5], nullptr);
         else if(argc == 5)
-            mission.setFileNames(argv[1], argv[2], argv[3], nullptr, argv[4]);
+            mission.setFileNames(argv[1], argv[2], argv[3], nullptr, argv[4], nullptr);
         else if(argc == 3)
-            mission.setFileNames(argv[1], argv[1], argv[1], argv[1], argv[2]);
+            mission.setFileNames(argv[1], argv[1], argv[1], argv[1], argv[2], nullptr);
         else
         {   //TODO: Fix warning text
             std::cout<<"Wrong number of input XML-files. It should be either all-in-one file, or three ones: map-file, task-file and config-file. Additional file with obstacles is also allowed.\n";

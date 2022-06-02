@@ -10,9 +10,11 @@
 #define CN_OBSTL            1
 
 //default values
-#define CN_POS_TOL                          1
+#define CN_POS_TOL                          3
 #define CN_ANG_TOL                          12.0
 #define CN_DEFAULT_RESOLUTION               1
+#define CN_DEFAULT_HWEIGHT                  1.0
+#define CN_MAX_OBSTACLE_TIME                CN_INFINITY
 
 #define CN_DEFAULT_SIZE                     0.5
 #define CN_DEFAULT_RSPEED                   1.0

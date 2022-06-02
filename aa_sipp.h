@@ -8,6 +8,7 @@
 #include "task.h"
 #include "dynamicobstacles.h"
 #include <math.h>
+#include <cmath>
 #include <memory>
 #include <algorithm>
 #include <unordered_map>
@@ -15,6 +16,7 @@
 #include "primitive.h"
 #include "dubins.h"
 #include <fstream>
+
 #ifdef __linux__
     #include <sys/time.h>
 #else
@@ -33,6 +35,7 @@ private:
 
     bool stopCriterion(const Node &curNode, Node &goalNode);
     std::list<Node> findSuccessors(const Node curNode, const Map &map);
+
     void makePrimaryPath(Node curNode);
     void makeSecondaryPath();
     bool findPath(unsigned int numOfCurAgent, const Map &map);

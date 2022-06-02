@@ -69,7 +69,11 @@ struct SafeInterval
     double end;
     int id;
     SafeInterval(double begin_=0, double end_=CN_INFINITY, int id_=0):begin(begin_), end(end_), id(id_) {}
+    bool operator <(SafeInterval& other){
+        return this->begin < other.begin;
+    }
 };
+
 struct TerminalPoint
 {
     double i,j,t,angle;

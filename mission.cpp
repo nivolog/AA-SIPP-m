@@ -12,13 +12,14 @@ Mission::~Mission()
     delete m_pLogger;
 }
 
-void Mission::setFileNames(const char *taskName, const char *mapName, const char *configName, const char *obstaclesName, const char *primitivesName)
+void Mission::setFileNames(const char *taskName, const char *mapName, const char *configName, const char *obstaclesName, const char *primitivesName, const char *logName)
 {
     this->taskName = taskName;
     this->mapName = mapName;
     this->configName = configName;
     this->obstaclesName = obstaclesName;
     this->primitivesName = primitivesName;
+    this->logName = logName;
 }
 
 bool Mission::getMap()
@@ -58,8 +59,13 @@ void Mission::createLog()
 {
     if(m_config.loglevel != CN_LOGLVL_NO)
     {
-        m_pLogger = new XmlLogger(m_config.loglevel);
-        m_pLogger->createLog(taskName);
+        if(logName != nullptr){
+            m_pLogger = new XmlLogger(m_config.loglevel);
+            m_pLogger->createLog(logName);
+        }else{
+            m_pLogger = new XmlLogger(m_config.loglevel);
+            m_pLogger->createLog(taskName);
+        }
     }
 }
 

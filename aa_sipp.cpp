@@ -1,4 +1,5 @@
 #include "aa_sipp.h"
+
 AA_SIPP::AA_SIPP(const Config &config, const char *primitivesName)
 {
     this->config = std::make_shared<const Config> (config);
@@ -39,11 +40,30 @@ bool AA_SIPP::stopCriterion(const Node &curNode, Node &goalNode)
 
 double AA_SIPP::getHValue(int i, int j, double o)
 {
-//    return (sqrt(pow(i - curagent.goal_i, 2) + pow(j - curagent.goal_j, 2))) * this->resolution; /// 1.13137;
     const Dub_Point curr = Dub_Point(0, 0, fmod(360-o, 360)/360*2*PI);
     const Dub_Point goal = Dub_Point(curagent.goal_j-j, -(curagent.goal_i-i), fmod(360-curagent.goal_heading, 360)/360*2*PI);
-    return dubins.distance(&curr, &goal);
-//    return 0;
+    double res = 1.5 * dubins.distance(&curr, &goal) * this->resolution;
+    return res;
+
+
+    double w = 1.0;
+    int dx = j - curagent.goal_j;
+    int dy = i - curagent.goal_i;
+
+    //!Diagonal distance
+//    return (min(abs(dy), abs(dx))*sqrt(2) + abs(dx - dy)) * w * this->resolution;
+
+    //!Euclidean distance
+    return sqrt(pow(dy, 2) + pow(dx, 2)) * w * this->resolution;
+
+    //!M-distance
+//    if (dx > dy) std::swap(dx,dy);
+//    if (3*dx < dy) return (dy - 3*dx + sqrt(10)*dx) * w * this->resolution;
+//    else if (2*dx < dy) return (sqrt(10)*(dy - 2*dx) + sqrt(5)*(3*dx - dy)) * w * this->resolution;
+//    else if (3*dx < 2*dy) return (sqrt(5)*(2*dy - 3*dx) + sqrt(13)*(2*dx - dy)) * w * this->resolution;
+//    else return (sqrt(13)*(dy - dx) + sqrt(2)*(3*dx - 2*dy)) * w * this->resolution;
+
+    return 0;
 }
 
 std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
@@ -83,20 +103,32 @@ std::list<Node> AA_SIPP::findSuccessors(const Node curNode, const Map &map)
         }
         else
         {
-            intervals = constraints->findIntervals(newNode, EAT, closed, Open);
-            for(unsigned int k = 0; k < intervals.size(); k++)
-            {
-                newNode.interval = intervals[k];
-                newNode.interval_id = newNode.interval.id;
-                newNode.g = EAT[k];
-                newNode.F = newNode.g + h_value;
-                newNode.angle_id = p.target.angle_id;
-                successors.push_front(newNode);
-            }
+//            if(curNode.g < CN_MAX_OBSTACLE_TIME){
+                intervals = constraints->findIntervals(newNode, EAT, closed, Open);
+                for(unsigned int k = 0; k < intervals.size(); k++)
+                {
+                    newNode.interval = intervals[k];
+                    newNode.interval_id = newNode.interval.id;
+                    newNode.g = EAT[k];
+                    newNode.F = newNode.g + h_value;
+                    newNode.angle_id = p.target.angle_id;
+                    successors.push_front(newNode);
+                }
+//            }else{
+//                SafeInterval _interval(curNode.g, CN_INFINITY);
+//                newNode.interval = _interval;
+//                newNode.interval_id = 0;
+//                newNode.F = newNode.g + h_value;
+//                newNode.angle_id = p.target.angle_id;
+//                successors.push_front(newNode);
+//            }
+
         }
     }
     return successors;
 }
+
+
 
 void AA_SIPP::setPriorities(const Task& task)
 {
@@ -192,7 +224,7 @@ bool AA_SIPP::changePriorities(int bad_i)
     }
 }
 
-SearchResult AA_SIPP::startSearch(Map &map, Task &task, DynamicObstacles &obstacles)
+SearchResult AA_SIPP:: startSearch(Map &map, Task &task, DynamicObstacles &obstacles)
 {
 
 #ifdef __linux__
@@ -211,9 +243,13 @@ SearchResult AA_SIPP::startSearch(Map &map, Task &task, DynamicObstacles &obstac
     do
     {
         constraints = new Constraints(map.width, map.height);
+        constraints->resetSafeIntervals(map.width, map.height);
         constraints->setObstacles(&obstacles);
-        for(int k = 0; k < obstacles.getNumberOfObstacles(); k++)
+        for(int k = 0; k < obstacles.getNumberOfObstacles(); k++){
             constraints->addConstraints(obstacles.getPrimitives(k), obstacles.getSize(k), obstacles.getMSpeed(k), map);
+
+        }
+        constraints->countCollisions();
 
         sresult.pathInfo.clear();
         sresult.pathInfo.resize(task.getNumberOfAgents());
@@ -225,9 +261,11 @@ SearchResult AA_SIPP::startSearch(Map &map, Task &task, DynamicObstacles &obstac
         for(unsigned int numOfCurAgent = 0; numOfCurAgent < task.getNumberOfAgents(); numOfCurAgent++)
         {
             curagent = task.getAgent(current_priorities[numOfCurAgent]);
-            constraints->setSize(curagent.size);
-            if(findPath(current_priorities[numOfCurAgent], map))
+            constraints->setSize(4.25);
+            if(findPath(current_priorities[numOfCurAgent], map)){
                 constraints->addConstraints(sresult.pathInfo[current_priorities[numOfCurAgent]].primitives, curagent.size, curagent.mspeed, map);
+                constraints->countCollisions();
+            }
             else
             {
                 bad_i = current_priorities[numOfCurAgent];
@@ -273,8 +311,9 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     constraints->resetSafeIntervals(map.width, map.height);
     for(int i=0; i<map.height; i++)
         for(int j=0; j<map.width; j++)
-            constraints->updateCellSafeIntervals({i,j});
-    //constraints->updateCellSafeIntervals({curagent.start_i, curagent.start_j});
+            constraints->countSafeIntervals({i,j});
+//            constraints->updateCellSafeIntervals({i,j});
+//    constraints->updateCellSafeIntervals({curagent.start_i, curagent.start_j});
 
 #ifdef __linux__
     timeval begin, end;
@@ -286,8 +325,10 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     QueryPerformanceFrequency(&freq);
 #endif
     Node curNode(curagent.start_i, curagent.start_j, 0, 0), goalNode(curagent.goal_i, curagent.goal_j, CN_INFINITY, CN_INFINITY);
+//    constraints->countSafeIntervals({curNode.i, curNode.j});
     curNode.interval = constraints->getSafeInterval(curNode.i, curNode.j, 0);
     curNode.interval_id = curNode.interval.id;
+    curNode.heading = 0;
     curNode.heading = curagent.start_heading;
     curNode.F = getHValue(curNode.i, curNode.j, curNode.heading);
     curNode.angle_id = int(curNode.heading / this->angle_step);
@@ -298,33 +339,22 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
     Open.addOpen(curNode);
     bool goalOpened = false;
     double timeH(0);
+
     while(!stopCriterion(curNode, goalNode) && !goalOpened)
     {
         curNode = Open.findMin();
-//        std::cout << "Currently working on (" << curNode.j << ", " << curNode.i << ")\n";
-        // We count additional H-value, because it's much more easy to track spent time
-
 
         closed.insert(curNode);
 
-        gettimeofday(&beginH, NULL);
         auto successors = findSuccessors(curNode, map);
-        gettimeofday(&endH, NULL);
-        timeH += (endH.tv_sec - beginH.tv_sec)*1000000 + static_cast<double>(endH.tv_usec - beginH.tv_usec);
-
         for(Node s:successors){
             Open.addOpen(s);
-
-//            goalOpened = stopCriterion(s, goalNode);
-//            if (goalOpened) break;
         }
 
     }
     std::cout << "Closed size: " << closed.size() << "\n";
     std::cout << "Opened size: " << Open.open.size() << "\n";
     std::cout << "Nodes expanded: " << closed.size() + Open.open.size() << "\n";
-    std::cout << "Time for finding successors: " << timeH << " us\n";
-    std::cout << "Average time per finding successors: " << timeH/closed.size() << " us\n";
 
     if(goalNode.g < CN_INFINITY)
     {
@@ -342,6 +372,8 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
         resultPath.pathfound = true;
         resultPath.primitives = primitives_path;
         resultPath.pathlength = goalNode.g;
+        resultPath.closed_size = closed.size();
+        resultPath.open_size = Open.open.size();
         sresult.pathfound = true;
         sresult.flowtime += goalNode.g;
         sresult.makespan = std::max(sresult.makespan, goalNode.g);
@@ -365,7 +397,6 @@ bool AA_SIPP::findPath(unsigned int numOfCurAgent, const Map &map)
         resultPath.pathlength = 0;
         sresult.pathInfo[numOfCurAgent] = resultPath;
     }
-    std::cout << "Time for finding successors in relative to total time: " << timeH / (resultPath.runtime*10000) << " % of total time\n";
     return resultPath.pathfound;
 }
 
