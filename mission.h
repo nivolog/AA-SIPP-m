@@ -8,6 +8,7 @@
 #include "aa_sipp.h"
 #include "task.h"
 #include "dynamicobstacles.h"
+#include "sipp_mp.h"
 
 class Mission
 {
